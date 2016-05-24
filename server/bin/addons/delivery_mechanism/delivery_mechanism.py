@@ -1391,12 +1391,12 @@ class stock_picking(osv.osv):
             self._manual_create_rw_messages(cr, uid, context=context)
 
         if context.get('rw_sync', False):
-            prog_id = self.update_processing_info(cr, uid, picking_id, prog_id, {
+            prog_id = self.update_processing_info(cr, uid, wizard['picking_id'][0], prog_id, {
                 'end_date': time.strftime('%Y-%m-%d %H:%M:%S')
             }, context=context)
             if backorder_id:
                 return backorder_id
-            return wizard.picking_id.id
+            return wizard['picking_id'][0]
 
         if context.get('from_simu_screen'):
             view_id = self.pool.get('ir.model.data').get_object_reference(cr, uid, 'stock', 'view_picking_in_form')[1]
@@ -1405,7 +1405,7 @@ class stock_picking(osv.osv):
             return {
                 'type': 'ir.actions.act_window',
                 'res_model': 'stock.picking',
-                'res_id': wizard.picking_id.id,
+                'res_id': wizard['picking_id'][0],
                 'view_id': [view_id, tree_view_id],
                 'search_view_id': src_view_id,
                 'view_mode': 'form, tree',
