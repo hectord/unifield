@@ -1391,7 +1391,7 @@ class stock_picking(osv.osv):
             self._manual_create_rw_messages(cr, uid, context=context)
 
         if context.get('rw_sync', False):
-            prog_id = self.update_processing_info(cr, uid, wizard['picking_id'][0], prog_id, {
+            prog_id = self.update_processing_info(cr, uid, picking_id, prog_id, {
                 'end_date': time.strftime('%Y-%m-%d %H:%M:%S')
             }, context=context)
             if backorder_id:
