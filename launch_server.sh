@@ -40,7 +40,7 @@ log_level = info
 logfile = None
 login_message = False
 logrotate = True
-netrpc = True
+netrpc = $NETRPC_PORT
 netrpc_gzip = False
 netrpc_interface = 
 netrpc_port = 8001
@@ -80,4 +80,5 @@ xmlrpcs_interface =
 xmlrpcs_port = 8002
 HERE
 
-python server/bin/openerp-server.py --db_user=$DBUSERNAME --db_password=$DBPASSWORD --db_host=localhost -c openerp-server.conf
+python server/bin/openerp-server.py --db_user=$DBUSERNAME --db_password=$DBPASSWORD --db_port=$DBPORT --db_host=$DBADDRESS -c openerp-server.conf
+
