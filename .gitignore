@@ -81,6 +81,7 @@ celerybeat-schedule
 # virtualenv
 venv/
 ENV/
+myenv/
 
 # Spyder project settings
 .spyderproject
@@ -90,3 +91,5 @@ ENV/
 credentials.py
 openerp-server.conf
 openerp-web.cfg
+
+*/.bzr
