@@ -17,4 +17,5 @@ reportlab==3.2.0
 simplejson==3.8.1
 six==1.10.0
 wsgiref==0.1.2
-#egenix-mx-base==3.2.9
+egenix-mx-base==3.2.9
+

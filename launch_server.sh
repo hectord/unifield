@@ -1,5 +1,14 @@
 #!/bin/bash
 
+set -e
+
+if [[ ! -e myenv ]]
+then
+    virtualenv myenv
+    pip install -r requirements.txt
+fi
+source myenv/bin/activate
+
 . config.sh
 
 cat <<HERE > openerp-server.conf

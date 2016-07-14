@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [[ ! -e myenv ]]
+then
+    virtualenv myenv
+    pip install -r requirements.txt
+fi
+source myenv/bin/activate
+
 cat <<HERE > openerp-web.cfg
 [global]
 server.environment = "development"
@@ -43,7 +50,7 @@ log.error_level = "INFO"
 # requires that access_file and error_file be uncommented and set correctly
 # (they will be used to configure the rotating file handlers).
 # Value should be a dictionary providing TimedRotatingFileHandler's optional
-# arguments (any argument can be provided but `filename`).
+# arguments (any argument can be provided but).
 # See the documentation at http://docs.python.org/library/logging.handlers.html#logging.handlers.TimedRotatingFileHandler
 # for more informations on TimedRotatingFileHandler
 #log.rotate = {'when' : 'midnight'}
