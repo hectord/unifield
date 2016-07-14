@@ -80,5 +80,5 @@ xmlrpcs_interface =
 xmlrpcs_port = 8002
 HERE
 
-python server/bin/openerp-server.py --db_user=$DBUSERNAME --db_password=$DBPASSWORD --db_port=$DBPORT --db_host=$DBADDRESS -c openerp-server.conf
+python server/bin/openerp-server.py --db_user=$DB_USERNAME --db_password=$DB_PASSWORD --db_port=$DB_PORT --db_host=$DB_ADDRESS -c openerp-server.conf $@
 
