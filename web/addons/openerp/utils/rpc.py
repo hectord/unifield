@@ -191,17 +191,45 @@ class NETRPCGateway(RPCGateway):
     """NETRPC Implementation.
     """
 
+    def __init__(self, session):
+        super(NETRPCGateway, self).__init__(session)
+        self.sock = None
+
+    def __reconnect(self):
+        self.sock = TinySocket()
+        self.sock.connect(self.session.host, self.session.port)
+        self.sock.sock.settimeout(self.socket_timeout)
+
     def __rpc__(self, obj, method, args=(), auth=True):
-        sock = TinySocket()
         try:
-            sock.connect(self.session.host, self.session.port)
-            sock.sock.settimeout(self.socket_timeout)
-            if auth:
-                args = (self.session.db, self.session.uid, self.session.password) + args
-            sock.send((obj, method) + args)
-            res = sock.receive()
-            sock.disconnect()
-            return res
+            nbattempts = 0
+            exception = None
+
+            if self.sock is None:
+                self.__reconnect()
+
+            while nbattempts < 5:
+
+                try:
+                    new_args = args
+                    if auth:
+                        new_args = (self.session.db, self.session.uid, self.session.password) + new_args
+                    self.sock.send((obj, method) + new_args)
+                    res = self.sock.receive()
+                    return res
+                except socket.timeout as e:
+                    nbattempts += 1
+                    exception = e
+
+                    try:
+                        self.sock.disconnect()
+                    except:
+                        pass
+                    self.sock = None
+
+                    self.__reconnect()
+
+            raise exception
 
         except xmlrpclib.Fault, err:
             raise RPCException(err.faultCode, err.faultString)
