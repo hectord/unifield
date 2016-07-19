@@ -3333,6 +3333,12 @@ class orm(orm_template):
         return super(orm, self).fields_get(cr, user, fields, context, write_access)
 
     def read(self, cr, user, ids, fields=None, context=None, load='_classic_read'):
+
+        #print "============================"
+        #import traceback
+        #traceback.print_stack()
+        #print "============================"
+
         if not ids:
             return []
         if context is None:
@@ -3410,8 +3416,16 @@ class orm(orm_template):
                 if f == self.CONCURRENCY_CHECK_FIELD:
                     continue
                 if self._columns[f].translate:
+                    #print "TRANSLATION", f, self, res
                     ids = [x['id'] for x in res]
                     #TODO: optimize out of this loop
+                    #print "++++"
+                    #print self.pool, type(self.pool)
+                    #print self.pool.get('ir.translation'), type(self.pool.get('ir.translation'))
+                    #print self.pool.get('ir.translation')._get_ids, type(self.pool.get('ir.translation')._get_ids)
+                    #print self.pool.get('ir.translation'). _auto_init
+                    #print "===="
+
                     res_trans = self.pool.get('ir.translation')._get_ids(cr, user, self._name+','+f, 'model', context.get('lang', False) or 'en_US', ids)
                     for r in res:
                         r[f] = res_trans.get(r['id'], False) or r[f]
