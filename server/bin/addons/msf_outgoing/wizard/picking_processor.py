@@ -236,6 +236,7 @@ class stock_move_processor(osv.osv):
 
         res = {}
 
+
         for line in self.browse(cr, uid, ids, context=context):
             # Return an error if the move has no product defined
             if not line.move_id.product_id:

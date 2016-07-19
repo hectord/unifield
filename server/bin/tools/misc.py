@@ -827,6 +827,9 @@ class cache(object):
     def __call__(self, fn):
         if self.fun is not None:
             raise Exception("Can not use a cache instance on more than one function")
+
+        import traceback
+        traceback.print_stack()
         self.fun = fn
 
         argspec = inspect.getargspec(fn)

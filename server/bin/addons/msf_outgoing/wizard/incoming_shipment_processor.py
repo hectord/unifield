@@ -421,6 +421,11 @@ class stock_move_in_processor(osv.osv):
             uid, 'stock', 'stock_location_stock')[1]
         cd_id = False
 
+        #print "=============================="
+        #import traceback
+        #traceback.print_stack()
+        #print "=============================="
+
         # get related move ids and map them to ids
         moves_to_ids = {}
         for r in self.read(cr, uid, ids, ['move_id'], context=context):
