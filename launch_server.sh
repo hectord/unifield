@@ -5,9 +5,9 @@ set -e
 if [[ ! -e myenv ]]
 then
     virtualenv myenv
-    pip install -r requirements.txt
 fi
 source myenv/bin/activate
+pip install -r requirements.txt
 
 . config.sh
 
