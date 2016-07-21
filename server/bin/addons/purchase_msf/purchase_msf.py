@@ -58,47 +58,75 @@ class purchase_order_line(osv.osv):
                         break
 
         return result
-    
+
     def _getProductInfo(self, cr, uid, ids, field_name, arg, context=None):
         '''
         compute function fields related to product identity
         '''
         prod_obj = self.pool.get('product.product')
+        order_obj = self.pool.get('purchase.order')
+        seller_obj = self.pool.get('product.supplierinfo')
         # the name of the field is used to select the data to display
         result = {}
         for i in ids:
             result[i] = {}
             for f in field_name:
                 result[i].update({f:False,})
-                
-        for obj in self.browse(cr, uid, ids, context=context):
+
+        line_result = self.read(cr, uid, ids, ['product_id', 'order_id'],
+                context=context, name_get=False)
+        product_list = [x['product_id'][0] for x in line_result if x['product_id']]
+        product_dict = dict((x['id'], x) for x in prod_obj.read(cr, uid, product_list,
+                ['default_code', 'name', 'seller_ids'], context=context,
+                name_get=False))
+        sellers_dict = {}
+        seller_dict = {}
+        order_id_dict = {}
+
+        for line in line_result:
             # default values
             internal_code = False
             internal_name = False
             supplier_code = False
             supplier_name = False
-            if obj.product_id:
-                prod = obj.product_id
+            if line['product_id']:
+                prod = product_dict[line['product_id'][0]]
                 # new fields
-                internal_code = prod.default_code
-                internal_name = prod.name
+                internal_code = prod['default_code']
+                internal_name = prod['name']
                 # filter the seller list - only select the seller which corresponds
                 # to the supplier selected during PO creation
                 # if no supplier selected in product, there is no specific supplier info
-                if prod.seller_ids:
-                    partner_id = obj.order_id.partner_id.id
-                    sellers = filter(lambda x: x.name.id == partner_id, prod.seller_ids)
+                if prod['seller_ids']:
+                    order_id = line['order_id'][0]
+                    if order_id in order_id_dict:
+                        partner_id = order_id_dict[order_id]
+
+                    else:
+                        partner_id = order_obj.read(cr, uid,
+                                order_id,['partner_id'],
+                                context=context, name_get=False)['partner_id'][0]
+                        order_id_dict[order_id] = partner_id
+                    if prod['seller_ids'] in sellers_dict:
+                        sellers = sellers_dict[prod['seller_ids']]
+                    else:
+                        sellers = filter(lambda x: x == partner_id, prod['seller_ids'])
+                        sellers_dict[prod['seller_ids']] = sellers
                     if sellers:
-                        seller = sellers[0]
-                        supplier_code = seller.product_code
-                        supplier_name = seller.product_name
+                        seller_id = sellers[0]
+                        if seller_id in seller_dict:
+                            seller = seller_dict[seller_id]
+                        else:
+                            seller = seller_obj.read(cr, uid, seller_id, ['product_code', 'product_name'], context=context)
+                            seller_dict[seller_id] = seller
+                        supplier_code = seller['product_code']
+                        supplier_name = seller['product_name']
             # update dic
-            result[obj.id].update(internal_code=internal_code,
+            result[line['id']].update(internal_code=internal_code,
                                   internal_name=internal_name,
                                   supplier_code=supplier_code,
                                   supplier_name=supplier_name,
                                   )
-        
         return result
 
     _columns = {'internal_code': fields.function(_getProductInfo, method=True, type='char', size=1024, string='Internal code', multi='get_vals',),
@@ -117,7 +145,7 @@ class product_product(osv.osv):
 
     _inherit = 'product.product'
     _description = 'Product'
-    
+
     def name_get(self, cr, user, ids, context=None):
         if context is None:
             context = {}
@@ -129,21 +157,18 @@ class product_product(osv.osv):
             if code:
                 name = '[%s] %s' % (code,name)
             if d.get('variants'):
-                name = name + ' - %s' % (d['variants'],)
+                name = '%s - %s' % (name, d['variants'],)
             return (d['id'], name)
 
         partner_id = context.get('partner_id', False)
-
         result = []
-        for product in self.browse(cr, user, ids, context=context):
-            mydict = {
-                      'id': product.id,
-                      'name': product.name,
-                      'default_code': product.default_code,
-                      'variants': product.variants
-                      }
-            result.append(_name_get(mydict))
+        read_result = self.read(cr, user, ids,
+                                ['id', 'name', 'default_code', 'variants'],
+                                context=context)
+
+        for product_dict in read_result:
+            result.append(_name_get(product_dict))
         return result
-    
+
 product_product()
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

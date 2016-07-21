@@ -1989,6 +1989,7 @@ The parameter '%s' should be an browse_record instance !""") % (method, self._na
             prog_id = self.update_sourcing_progress(cr, uid, order, False, {
                'check_data': _('Done'),
             }, context=context)
+            move_to_cancel = set()
             for line in order.order_line:
                 proc_id = False
 
@@ -2048,14 +2049,10 @@ The parameter '%s' should be an browse_record instance !""") % (method, self._na
                         UF-1155: Divided the cancel of the move in two times to avaid the cancelation of the field order
                         """
                         if line.procurement_id.move_id:
-                            cancel_move_id = line.procurement_id.move_id.id
+                            move_to_cancel.add(line.procurement_id.move_id.id)
 
                         # Update corresponding procurement order with the new stock move
                         proc_obj.write(cr, uid, [line.procurement_id.id], {'move_id': move_id}, context=context)
-
-                        if cancel_move_id:
-                            # Ase action_cancel actually, because there is not stock picking or related stock moves
-                            move_obj.action_cancel(cr, uid, [line.procurement_id.move_id.id], context=context)
 
                         if line.type == 'make_to_order':
                             pol_update_ids = pol_obj.search(cr, uid,
@@ -2132,6 +2129,8 @@ The parameter '%s' should be an browse_record instance !""") % (method, self._na
                     )
                     self.infolog(cr, uid, msg)
 
+            if move_to_cancel:
+                move_obj.action_cancel(cr, uid, list(move_to_cancel), context=context)
             prog_id = self.update_sourcing_progress(cr, uid, order, False, {
                'prepare_picking': _('In Progress'),
             }, context=context)
