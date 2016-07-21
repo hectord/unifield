@@ -553,6 +553,7 @@ class ir_translation(osv.osv):
             for res_id, value in cr.fetchall():
                 res[res_id] = value
 
+            #print ids, name
             # US-394: If translation not found by res_id, search by xml_id
             for id in ids:
                 if res[id] == False:

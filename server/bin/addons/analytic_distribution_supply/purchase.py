@@ -367,13 +367,19 @@ class purchase_order_line(osv.osv):
         return res
 
     def _get_distribution_state_recap(self, cr, uid, ids, name, arg, context=None):
+        print "DEBUT"
         if isinstance(ids, (int, long)):
             ids = [ids]
         res = {}
         get_sel = self.pool.get('ir.model.fields').get_selection
+
         for pol in self.read(cr, uid, ids, ['analytic_distribution_state', 'have_analytic_distribution_from_header']):
-            d_state = get_sel(cr, uid, self._name, 'analytic_distribution_state', pol['analytic_distribution_state'], context)
-            res[pol['id']] = "%s%s"%(d_state, pol['have_analytic_distribution_from_header'] and _(" (from header)") or "")
+            pass
+            #d_state = get_sel(cr, uid, self._name, 'analytic_distribution_state', pol['analytic_distribution_state'], context)
+            #res[pol['id']] = "%s%s"%(d_state, pol['have_analytic_distribution_from_header'] and _(" (from header)") or "")
+
+        print res
+        print "FIN"
         return res
 
     def _get_distribution_account(self, cr, uid, ids, name, arg, context=None):

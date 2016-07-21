@@ -260,6 +260,9 @@ class osv_pool(object):
         if name in self.obj_pool:
             del self.obj_pool[name]
         self.obj_pool[name] = obj_inst
+        #print "ADD", name
+        #import traceback
+        #traceback.print_stack()
 
         module = str(obj_inst.__class__)[6:]
         module = module[:len(module)-1]

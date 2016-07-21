@@ -3409,8 +3409,10 @@ class orm(orm_template):
                         raise except_orm(_('AccessError'),
                                          _('Operation prohibited by access rules, or performed on an already deleted document (Operation: read, Document type: %s).')
                                          % (self._description,))
+                    print query, [tuple(sub_ids)] + rule_params, "!"
                 else:
                     cr.execute(query, (tuple(sub_ids),))
+                    print query, (tuple(sub_ids),)
                 res.extend(cr.dictfetchall())
             for f in fields_pre:
                 if f == self.CONCURRENCY_CHECK_FIELD:
@@ -3467,6 +3469,10 @@ class orm(orm_template):
         for f in fields_post:
             todo.setdefault(self._columns[f]._multi, [])
             todo[self._columns[f]._multi].append(f)
+
+        #if todo:
+            #print todo, "<="
+
         for key, val in todo.items():
             if key:
                 res2 = self._columns[val[0]].get(cr, self, ids, val, user, context=context, values=res)

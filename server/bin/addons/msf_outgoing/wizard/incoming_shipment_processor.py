@@ -466,6 +466,7 @@ class stock_move_in_processor(osv.osv):
         for id in ids:
             if id not in res:
                 res[id] = False
+
         return res
 
     _columns = {

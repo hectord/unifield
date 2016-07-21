@@ -480,7 +480,23 @@ class OpenERPDispatcher:
                 logger.log(channel, line)
 
     def dispatch(self, service_name, method, params):
+
         try:
+            _count = globals()['_count']
+        except Exception as e:
+            _count = {}
+            globals()['_count'] = _count
+
+
+        try:
+            import datetime
+            epoch = datetime.datetime.utcfromtimestamp(0)
+            def unix_time_millis(dt):
+                return (dt - epoch).total_seconds() * 1000.0
+ 
+            from_dt = unix_time_millis(datetime.datetime.now())
+            print service_name, method, params
+
             logger = logging.getLogger('result')
             self.log('service', service_name)
             self.log('method', method)
@@ -488,6 +504,19 @@ class OpenERPDispatcher:
             auth = getattr(self, 'auth_provider', None)
             result = ExportService.getService(service_name).dispatch(method, auth, params)
             self.log('result', result, channel=logging.DEBUG_RPC_ANSWER)
+
+
+            to_dt = unix_time_millis(datetime.datetime.now())
+            time_taken = to_dt - from_dt
+            the_params = tuple(params[:min(len(params), 5)])
+
+            _count[the_params] = _count.get(the_params, 0) + time_taken
+
+            #liste = sorted(_count.items(), key=lambda x : x[1])
+            #for a, b in liste:
+                #print "====>", a, b
+
+
             return result
         except Exception, e:
             self.log('exception', tools.exception_to_unicode(e))
