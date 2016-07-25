@@ -481,54 +481,13 @@ class OpenERPDispatcher:
 
     def dispatch(self, service_name, method, params):
         try:
-            _time_taken = globals()['_time_taken']
-            _nbcall = globals()['_nbcall']
-        except Exception as e:
-            _time_taken = {}
-            _nbcall = {}
-            globals()['_time_taken'] = _time_taken
-            globals()['_nbcall'] = _nbcall
-
-        try:
             logger = logging.getLogger('result')
-
-            import datetime
-            epoch = datetime.datetime.utcfromtimestamp(0)
-            def unix_time_millis(dt):
-                return (dt - epoch).total_seconds() * 1000.0
-            from_dt = unix_time_millis(datetime.datetime.now())
-            print "=================================================="
-            print service_name, method, params
-
             self.log('service', service_name)
             self.log('method', method)
             self.log('params', replace_request_password(params), depth=(None if logger.isEnabledFor(logging.DEBUG_RPC_ANSWER) else 1))
             auth = getattr(self, 'auth_provider', None)
             result = ExportService.getService(service_name).dispatch(method, auth, params)
             self.log('result', result, channel=logging.DEBUG_RPC_ANSWER)
-
-
-            to_dt = unix_time_millis(datetime.datetime.now())
-            time_taken = to_dt - from_dt
-            the_params = tuple(params[:min(len(params), 5)])
-
-            _time_taken[the_params] = _time_taken.get(the_params, 0) + time_taken
-            _nbcall[the_params] = _nbcall.get(the_params, 0) + 1
-
-
-            liste = sorted(_time_taken.items(), key=lambda x : x[0])
-            for a, b in liste:
-                indices = map(str, a)
-                indices += ((5-len(indices)) * [''])
-
-                indices += ['%.3f' % b, str(_nbcall[a])]
-
-                indices = map(lambda x : x.replace(';', 'SEM'), indices)
-
-                print ';'.join(map(str, indices))
-
-            print "++++++++++++++++++++++++++++++++++++++++++++"
-
             return result
         except Exception, e:
             self.log('exception', tools.exception_to_unicode(e))
