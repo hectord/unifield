@@ -13,7 +13,7 @@ TMPDIR_BRANCH=/tmp/tmp_branch
 rm -rf $1/*
 rm -rf $TMPDIR_BRANCH || true
 
-if [[ $# == 1 ]]
+if [[ $# == 2 ]]
 then
     bzr checkout --lightweight $2 $TMPDIR_BRANCH
 else
