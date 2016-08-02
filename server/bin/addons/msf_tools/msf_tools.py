@@ -30,6 +30,7 @@ from dateutil.relativedelta import relativedelta
 from datetime import datetime
 from datetime import date
 from decimal import Decimal, ROUND_UP
+import math
 
 import netsvc
 
@@ -735,7 +736,7 @@ class uom_tools(osv.osv_memory):
                 uom_id = [uom_id]
             cr.execute(
                 """
-                SELECT uom.id
+                SELECT COUNT(*)
                 FROM product_uom AS uom,
                     product_template AS pt,
                     product_product AS pp,
@@ -744,9 +745,9 @@ class uom_tools(osv.osv_memory):
                 AND pt.id = pp.product_tmpl_id
                 AND pp.id = %s
                 AND uom2.category_id = uom.category_id
-                AND uom2.id = %s LIMIT 1""",
+                AND uom2.id = %s""",
                 (product_id[0], uom_id[0]))
-            count = len(cr.fetchall())
+            count = cr.fetchall()[0][0]
             return count > 0
         return True
 
@@ -852,6 +853,10 @@ class finance_tools(osv.osv):
             else:
                 msg = _('Document date should be in posting date FY')
             raise osv.except_osv(_('Error'), msg)
+
+    def truncate_amount(self, amount, digits):
+        stepper = pow(10.0, digits)
+        return math.trunc(stepper * amount) / stepper
 
 finance_tools()
 
