@@ -2661,8 +2661,10 @@ class purchase_order_merged_line(osv.osv):
         '''
         Set the line number to 0
         '''
+        print "purchase_order_line, merged lines, purchase.py"
         if self._name == 'purchase.order.merged.line':
             vals.update({'line_number': 0})
+        print "next"
         return super(purchase_order_merged_line, self).create(cr, uid, vals, context=context)
 
     def write(self, cr, uid, ids, vals, context=None):
@@ -2951,6 +2953,7 @@ class purchase_order_line(osv.osv):
         '''
         Create or update a merged line
         '''
+        print "purchase_order_line, big process, purchase.py"
         if context is None:
             context = {}
 
@@ -3044,8 +3047,11 @@ class purchase_order_line(osv.osv):
                 comment_so = sol_obj.read(cr, uid, sale_id, ['comment'], context=context)[0]['comment']
                 vals.update(comment=comment_so)
 
+        print "next"
+
         # add the database Id to the sync_order_line_db_id
         po_line_id = super(purchase_order_line, self).create(cr, uid, vals, context=context)
+        print "purchase_order_line, next process, purchase.py"
         if not vals.get('sync_order_line_db_id', False): #'sync_order_line_db_id' not in vals or vals:
             name = order.name
             super(purchase_order_line, self).write(cr, uid, [po_line_id], {'sync_order_line_db_id': name + "_" + str(po_line_id),}, context=context)
@@ -3057,6 +3063,7 @@ class purchase_order_line(osv.osv):
                     'order_id': so_id,
                     'po_line_id': po_line_id,
                 }, context=context)
+        print "next"
 
         return po_line_id
 

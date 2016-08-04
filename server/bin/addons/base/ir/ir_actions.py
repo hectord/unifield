@@ -152,6 +152,11 @@ class act_window(osv.osv):
     _sequence = 'ir_actions_id_seq'
     _order = 'name'
 
+    @tools.read_cache(prefetch=[], context=[], timeout=8000, size=2000)
+    def _read_flat(self, cr, user, ids, fields_to_read, context=None, load='_classic_read'):
+        ret = super(act_window, self)._read_flat(cr, user, ids, fields_to_read, context, load)
+        return ret
+
     def _check_model(self, cr, uid, ids, context=None):
         for action in self.browse(cr, uid, ids, context):
             if not self.pool.get(action.res_model):
