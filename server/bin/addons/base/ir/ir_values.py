@@ -34,7 +34,6 @@ class ir_values(osv.osv):
 
     @tools.read_cache(prefetch=[], context=[], timeout=8000, size=2000)
     def _read_flat(self, cr, user, ids, fields_to_read, context=None, load='_classic_read'):
-        print "MISS"
         ret = super(ir_values, self)._read_flat(cr, user, ids, fields_to_read, context, load)
         return ret
 

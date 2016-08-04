@@ -47,6 +47,7 @@ class ir_ui_menu(osv.osv):
     def clear_cache(self):
         # radical but this doesn't frequently happen
         self._cache = {}
+        self._read_flat.clear_cache()
 
     @tools.read_cache(prefetch=[], context=[], timeout=8000, size=2000)
     def _read_flat(self, cr, user, ids, fields_to_read, context=None, load='_classic_read'):

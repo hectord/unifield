@@ -787,7 +787,7 @@ class cache(object):
 
     __caches = []
 
-    def __init__(self, timeout=None, skiparg=2, multi=None, size=8192, iter_results=lambda x : x.iteritems()):
+    def __init__(self, timeout=None, skiparg=2, multi=None, size=8192):
         assert skiparg >= 2 # at least self and cr
         if timeout is None:
             self.timeout = config['cache_timeout']
@@ -799,7 +799,6 @@ class cache(object):
         self.cache = LRU(size)      # TODO take size from config
         self.fun = None
         cache.__caches.append(self)
-        self._iter_results = iter_results
 
     def _unify_args(self, *args, **kwargs):
         # Update named arguments with positional argument values (without self and cr)
@@ -865,9 +864,9 @@ class cache(object):
                     self.cache[key] = (result2, time.time())
                     result[None] = result2
                 else:
-                    for id, value in self._iter_results(result2):
+                    for id in result2:
                         key = notincache[id]
-                        self.cache[key] = (value, time.time())
+                        self.cache[key] = (result2[id], time.time())
                     result.update(result2)
 
             if not self.multi:
@@ -900,10 +899,18 @@ class read_cache(object):
         kwargs2.update(dict(zip(self.fun_arg_names, args)))
         return kwargs2
 
+    def clear(self):
+        """clear the cache for all the databases (...)
+        """
+        keys_to_del = self.cache.keys()
+        for key in keys_to_del:
+            self.cache.pop(key)
+
     def __call__(self, fn):
         if self.fun is not None:
             raise Exception("Can not use a cache instance on more than one function")
         self.fun = fn
+        return fn
 
         argspec = inspect.getargspec(fn)
         # get rid of self and the database cursor
@@ -970,7 +977,10 @@ class read_cache(object):
                         value_in_cache, t = {}, time.time()
 
                     for field in kwargs2['fields_to_read']:
-                        value_in_cache[field] = value[field]
+                        # sometimes we don't get the column we ask to fetch...
+                        #  (it happens with inherit_id for ir_action_window)
+                        if field in value:
+                            value_in_cache[field] = value[field]
                     value_in_cache['id'] = id
 
                     self.cache[key] = (value_in_cache, t)
@@ -980,6 +990,7 @@ class read_cache(object):
             # TODO: Sort the results according to the sorted row
             return result
 
+        cached_result.clear_cache = self.clear
         return cached_result
 
 def to_xml(s):
