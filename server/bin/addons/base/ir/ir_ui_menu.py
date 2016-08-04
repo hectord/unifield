@@ -52,8 +52,6 @@ class ir_ui_menu(osv.osv):
     @tools.read_cache(prefetch=[], context=[], timeout=8000, size=2000)
     def _read_flat(self, cr, user, ids, fields_to_read, context=None, load='_classic_read'):
         ret = super(ir_ui_menu, self)._read_flat(cr, user, ids, fields_to_read, context, load)
-        #print "CALL _read_flat: ", cr, user, ids, fields_to_read, context, load
-        #print " RET", ret
         return ret
 
     def _filter_visible_menus(self, cr, uid, ids, context=None):
@@ -153,15 +151,21 @@ class ir_ui_menu(osv.osv):
 
     def create(self, *args, **kwargs):
         self.clear_cache()
-        return super(ir_ui_menu, self).create(*args, **kwargs)
+        ret = super(ir_ui_menu, self).create(*args, **kwargs)
+        self.clear_cache()
+        return ret
 
     def write(self, *args, **kwargs):
         self.clear_cache()
-        return super(ir_ui_menu, self).write(*args, **kwargs)
+        ret = super(ir_ui_menu, self).write(*args, **kwargs)
+        self.clear_cache()
+        return ret
 
     def unlink(self, *args, **kwargs):
         self.clear_cache()
-        return super(ir_ui_menu, self).unlink(*args, **kwargs)
+        ret = super(ir_ui_menu, self).unlink(*args, **kwargs)
+        self.clear_cache()
+        return ret
 
     def copy(self, cr, uid, id, default=None, context=None):
         ir_values_obj = self.pool.get('ir.values')

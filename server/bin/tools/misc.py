@@ -910,7 +910,6 @@ class read_cache(object):
         if self.fun is not None:
             raise Exception("Can not use a cache instance on more than one function")
         self.fun = fn
-        return fn
 
         argspec = inspect.getargspec(fn)
         # get rid of self and the database cursor
@@ -931,7 +930,7 @@ class read_cache(object):
             kwargs2 = self._unify_args(*args, **kwargs)
 
             # we have to remove from the context what doesn't impact the results
-            simplified_context = dict(filter(lambda (key, value) : key in self._context, kwargs2['context'].iteritems()))
+            simplified_context = dict(filter(lambda (key, value) : key not in self._context, kwargs2['context'].iteritems()))
             kwargs2['context'] = simplified_context
 
             # we have to keep in mind the fields that have to be returned
