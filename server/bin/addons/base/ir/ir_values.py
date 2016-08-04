@@ -34,8 +34,12 @@ class ir_values(osv.osv):
 
     @tools.read_cache(prefetch=[], context=[], timeout=8000, size=2000)
     def _read_flat(self, cr, user, ids, fields_to_read, context=None, load='_classic_read'):
-        ret = super(ir_values, self)._read_flat(cr, user, ids, fields_to_read, context, load)
-        return ret
+        return super(ir_values, self)._read_flat(cr, user, ids, fields_to_read, context, load)
+
+    def _clean_cache(self):
+        super(ir_values, self)._clean_cache()
+        # radical but this doesn't frequently happen
+        self._read_flat.clear_cache()
 
     def _real_unpickle(self, cr, uid, ids, name, arg, context=None):
         res = {}

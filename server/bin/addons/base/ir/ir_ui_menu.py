@@ -47,12 +47,16 @@ class ir_ui_menu(osv.osv):
     def clear_cache(self):
         # radical but this doesn't frequently happen
         self._cache = {}
-        self._read_flat.clear_cache()
 
     @tools.read_cache(prefetch=[], context=[], timeout=8000, size=2000)
     def _read_flat(self, cr, user, ids, fields_to_read, context=None, load='_classic_read'):
         ret = super(ir_ui_menu, self)._read_flat(cr, user, ids, fields_to_read, context, load)
         return ret
+
+    def _clean_cache(self):
+        super(ir_ui_menu, self)._clean_cache()
+        # radical but this doesn't frequently happen
+        self._read_flat.clear_cache()
 
     def _filter_visible_menus(self, cr, uid, ids, context=None):
         """Filters the give menu ids to only keep the menu items that should be
@@ -151,21 +155,15 @@ class ir_ui_menu(osv.osv):
 
     def create(self, *args, **kwargs):
         self.clear_cache()
-        ret = super(ir_ui_menu, self).create(*args, **kwargs)
-        self.clear_cache()
-        return ret
+        return super(ir_ui_menu, self).create(*args, **kwargs)
 
     def write(self, *args, **kwargs):
         self.clear_cache()
-        ret = super(ir_ui_menu, self).write(*args, **kwargs)
-        self.clear_cache()
-        return ret
+        return super(ir_ui_menu, self).write(*args, **kwargs)
 
     def unlink(self, *args, **kwargs):
         self.clear_cache()
-        ret = super(ir_ui_menu, self).unlink(*args, **kwargs)
-        self.clear_cache()
-        return ret
+        return super(ir_ui_menu, self).unlink(*args, **kwargs)
 
     def copy(self, cr, uid, id, default=None, context=None):
         ir_values_obj = self.pool.get('ir.values')
