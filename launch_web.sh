@@ -101,4 +101,4 @@ dbbutton.visible = True
 company.url = ''
 HERE
 
-python web/openerp-web.py -c openerp-web.cfg
+python2.6 web/openerp-web.py -c openerp-web.cfg

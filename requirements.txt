@@ -1,6 +1,6 @@
 Babel==2.1.1
 CherryPy==3.1.2
-FormEncode==1.3.0
+FormEncode==1.2.2
 Mako==1.0.3
 MarkupSafe==0.23
 Platypus==1.0
@@ -14,7 +14,8 @@ psycopg2==2.6.1
 pyaml==15.8.2
 python-dateutil==2.4.2
 pytz==2015.7
-reportlab==3.2.0
+#reportlab==3.2.0
+reportlab==2.4
 simplejson==3.8.1
 six==1.10.0
 wsgiref==0.1.2

@@ -4,7 +4,7 @@ set -e
 
 if [[ ! -e myenv ]]
 then
-    virtualenv myenv
+    virtualenv -p python2.6 myenv
 fi
 source myenv/bin/activate
 pip install -r requirements.txt
@@ -80,5 +80,5 @@ xmlrpcs_interface =
 xmlrpcs_port = 8002
 HERE
 
-python server/bin/openerp-server.py --db_user=$DB_USERNAME --db_password=$DB_PASSWORD --db_port=$DB_PORT --db_host=$DB_ADDRESS -c openerp-server.conf $@
+python2.6 server/bin/openerp-server.py --db_user=$DB_USERNAME --db_password=$DB_PASSWORD --db_port=$DB_PORT --db_host=$DB_ADDRESS -c openerp-server.conf $@
 
