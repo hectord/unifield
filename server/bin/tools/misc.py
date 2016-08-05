@@ -906,10 +906,41 @@ class read_cache(object):
         for key in keys_to_del:
             self.cache.pop(key)
 
+    def split_order_by_clause(self, order_by):
+        # we have to take into account the order whenever we fetch data
+        #  otherwise we won't be able to sort the result set
+        order_by = (order_by or '').strip()
+        if not order_by:
+            return []
+        else:
+            ret = []
+            fields = order_by.split(',')
+            for field in fields:
+                field = field.strip().split()
+                if len(field) == 1 or (len(field) == 2 and field[1].lower() == 'asc'):
+                    ret.append((True, field[0]))
+                elif len(field) == 2 and field[1].lower() == 'desc':
+                    ret.append((False, field[0]))
+            return ret
+
+    def sort_orderby(self, clause, rows):
+        return rows
+        def key_compare(row1, row2):
+            for asc, field in clause:
+                f1 = row1[field]
+                f2 = row2[field]
+                ret = cmp(f1, f2)
+                if ret != 0:
+                    return ret if asc else -ret
+            return 0
+        return sorted(rows, cmp=key_compare)
+
     def __call__(self, fn):
         if self.fun is not None:
             raise Exception("Can not use a cache instance on more than one function")
         self.fun = fn
+
+        fields_to_add = []
 
         argspec = inspect.getargspec(fn)
         # get rid of self and the database cursor
@@ -918,7 +949,16 @@ class read_cache(object):
         if argspec[3]:
             self.fun_default_values = dict(zip(self.fun_arg_names[-len(argspec[3]):], argspec[3]))
 
+        self._sort = None
+
         def cached_result(self2, cr, *args, **kwargs):
+
+            if self._sort is None:
+                order_by = self2._parent_order or self2._order
+                self._sort = order_by_clauses = self.split_order_by_clause(order_by)
+            else:
+                order_by_clauses = self._sort
+
             import time
             if time.time()-int(self.timeout) > self.lasttime:
                 self.lasttime = time.time()
@@ -963,6 +1003,9 @@ class read_cache(object):
 
             if notincache:
                 kwargs2['ids'] = notincache.keys()
+                fields_to_query = list(fields_to_read)
+
+                fields_to_query.extend(map(lambda x : x[1], order_by_clauses))
                 kwargs2['fields_to_read'] = fields_to_read
 
                 result2 = fn(self2, cr, **kwargs2)
@@ -975,7 +1018,7 @@ class read_cache(object):
                     else:
                         value_in_cache, t = {}, time.time()
 
-                    for field in kwargs2['fields_to_read']:
+                    for field in fields_to_read:
                         # sometimes we don't get the column we ask to fetch...
                         #  (it happens with inherit_id for ir_action_window)
                         if field in value:
@@ -986,8 +1029,7 @@ class read_cache(object):
 
                     result.append(value)
 
-            # TODO: Sort the results according to the sorted row
-            return result
+            return self.sort_orderby(order_by_clauses, result)
 
         cached_result.clear_cache = self.clear
         return cached_result
