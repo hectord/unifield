@@ -935,12 +935,22 @@ class read_cache(object):
             return 0
         return sorted(rows, cmp=key_compare)
 
+    def filter_dict(self, keys_to_remove, rowset):
+        ret = []
+
+        for row in rowset:
+            new_row = dict(**row)
+            for field in keys_to_remove:
+                if field in new_row and field != 'id':
+                    new_row.pop(field)
+            ret.append(new_row)
+
+        return ret
+
     def __call__(self, fn):
         if self.fun is not None:
             raise Exception("Can not use a cache instance on more than one function")
         self.fun = fn
-
-        fields_to_add = []
 
         argspec = inspect.getargspec(fn)
         # get rid of self and the database cursor
@@ -977,6 +987,11 @@ class read_cache(object):
             #  they will be erased when generating the key in the cache
             fields_to_read = kwargs2['fields_to_read']
 
+            # we have to keep track of the fields that are used for sorting but
+            #  are not asked by the caller. We'll have to remove them in the returned
+            #  resultset.
+            fields_to_remove = set([])
+
             result = []
             notincache = {}
             for key, id in _generate_keys('ids', cr.dbname, kwargs2, ['fields_to_read']):
@@ -989,7 +1004,10 @@ class read_cache(object):
                     if set(fields_to_read).issubset(set(fields_already_in_the_cache)):
                         # all the values are already in the cache, we don't
                         #  have to ask the DB for more information
-                        row = {'id': id}
+                        if not isinstance(id, long) and not isinstance(id, int):
+                            print self2._name, "!", id, type(id)
+
+                        row = {'id': int(id)}
                         for field in fields_to_read:
                             row[field] = values[field]
                         result.append(row)
@@ -1003,16 +1021,22 @@ class read_cache(object):
 
             if notincache:
                 kwargs2['ids'] = notincache.keys()
-                fields_to_query = list(fields_to_read)
+                fields_to_query = set(fields_to_read)
 
-                fields_to_query.extend(map(lambda x : x[1], order_by_clauses))
-                kwargs2['fields_to_read'] = fields_to_read
+                fields_to_add = map(lambda x : x[1], order_by_clauses)
+
+                for field_to_add in fields_to_add:
+                    if field_to_add not in fields_to_query:
+                        fields_to_remove.add(field_to_add)
+                    fields_to_query.add(field_to_add)
+
+                kwargs2['fields_to_read'] = list(fields_to_query)
 
                 result2 = fn(self2, cr, **kwargs2)
 
                 # we have to add the new rows in the resultset
                 for id, value in map(lambda x : (x['id'], x), result2):
-                    key = notincache[id]
+                    key = notincache[int(id)]
                     if key in self.cache:
                         value_in_cache, t = self.cache[key]
                     else:
@@ -1023,13 +1047,13 @@ class read_cache(object):
                         #  (it happens with inherit_id for ir_action_window)
                         if field in value:
                             value_in_cache[field] = value[field]
-                    value_in_cache['id'] = id
+                    value_in_cache['id'] = int(id)
 
                     self.cache[key] = (value_in_cache, t)
 
                     result.append(value)
 
-            return self.sort_orderby(order_by_clauses, result)
+            return self.filter_dict(fields_to_remove, self.sort_orderby(order_by_clauses, result))
 
         cached_result.clear_cache = self.clear
         return cached_result
