@@ -3442,18 +3442,12 @@ class orm(orm_template):
             def execute_request(res, query, rule_clause, local_ids):
                 if rule_clause:
                     cr.execute(query, [tuple(local_ids)] + rule_params)
-                    #print query, [tuple(local_ids)] + rule_params
                     if cr.rowcount != len(local_ids):
                         raise except_orm(_('AccessError'),
                                          _('Operation prohibited by access rules, or performed on an already deleted document (Operation: read, Document type: %s).')
                                          % (self._description,))
                 else:
-                    #print query, (tuple(local_ids),)
                     cr.execute(query, (tuple(local_ids),))
-
-                #if len(set(local_ids) ^ set([3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37])) == len(local_ids) - len([3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37]):
-                    #import traceback
-                    #traceback.print_stack()
 
                 res.extend(cr.dictfetchall())
 
@@ -4583,7 +4577,6 @@ class orm(orm_template):
             return res[0][0]
         select_query = ''.join(('SELECT "%s".id FROM ' % self._table,
             from_clause, where_str, order_by,limit_str, offset_str))
-        #print select_query, where_clause_params
         cr.execute(select_query, where_clause_params)
         res = cr.fetchall()
         return [x[0] for x in res]

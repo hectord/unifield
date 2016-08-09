@@ -985,7 +985,10 @@ class read_cache(object):
 
             # we have to keep in mind the fields that have to be returned
             #  they will be erased when generating the key in the cache
-            fields_to_read = kwargs2['fields_to_read']
+            if kwargs2['fields_to_read']:
+                fields_to_read = kwargs2['fields_to_read']
+            else:
+                fields_to_read = self2._columns.keys()
 
             # we have to keep track of the fields that are used for sorting but
             #  are not asked by the caller. We'll have to remove them in the returned
@@ -1004,9 +1007,6 @@ class read_cache(object):
                     if set(fields_to_read).issubset(set(fields_already_in_the_cache)):
                         # all the values are already in the cache, we don't
                         #  have to ask the DB for more information
-                        if not isinstance(id, long) and not isinstance(id, int):
-                            print self2._name, "!", id, type(id)
-
                         row = {'id': int(id)}
                         for field in fields_to_read:
                             row[field] = values[field]
@@ -1021,6 +1021,7 @@ class read_cache(object):
 
             if notincache:
                 kwargs2['ids'] = notincache.keys()
+
                 fields_to_query = set(fields_to_read)
 
                 fields_to_add = map(lambda x : x[1], order_by_clauses)
@@ -1028,9 +1029,9 @@ class read_cache(object):
                 for field_to_add in fields_to_add:
                     if field_to_add not in fields_to_query:
                         fields_to_remove.add(field_to_add)
-                    fields_to_query.add(field_to_add)
+                        fields_to_query.add(field_to_add)
 
-                kwargs2['fields_to_read'] = list(fields_to_query)
+                kwargs2['fields_to_read'] = fields_to_query
 
                 result2 = fn(self2, cr, **kwargs2)
 
