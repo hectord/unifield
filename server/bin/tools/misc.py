@@ -991,14 +991,14 @@ class read_cache(object):
                             or (f in self2._columns and getattr(self2._columns[f], '_classic_write'))
                          ] + self2._inherits.values()
 
-            include_sort = True
+            include_sort = False
             fields_to_query = set(fields_to_read)
             # we have to keep track of the fields that are used for sorting but
             #  are not asked by the caller. We'll have to remove them in the returned
             #  resultset.
             fields_to_remove = set([])
-            if not fields_pre:
-                include_sort = False
+            if fields_pre:
+                include_sort = True
 
                 fields_to_add = map(lambda x : x[1], order_by_clauses)
 
