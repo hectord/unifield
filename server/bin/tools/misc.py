@@ -962,13 +962,6 @@ class read_cache(object):
         self._sort = None
 
         def cached_result(self2, cr, *args, **kwargs):
-
-            if self._sort is None:
-                order_by = self2._parent_order or self2._order
-                self._sort = order_by_clauses = self.split_order_by_clause(order_by)
-            else:
-                order_by_clauses = self._sort
-
             import time
             if time.time()-int(self.timeout) > self.lasttime:
                 self.lasttime = time.time()
@@ -977,11 +970,13 @@ class read_cache(object):
                 for key in old_keys:
                     self.cache.pop(key)
 
-            kwargs2 = self._unify_args(*args, **kwargs)
+            if self._sort is None:
+                order_by = self2._parent_order or self2._order
+                self._sort = order_by_clauses = self.split_order_by_clause(order_by)
+            else:
+                order_by_clauses = self._sort
 
-            # we have to remove from the context what doesn't impact the results
-            simplified_context = dict(filter(lambda (key, value) : key not in self._context, kwargs2['context'].iteritems()))
-            kwargs2['context'] = simplified_context
+            kwargs2 = self._unify_args(*args, **kwargs)
 
             # we have to keep in mind the fields that have to be returned
             #  they will be erased when generating the key in the cache
@@ -990,10 +985,34 @@ class read_cache(object):
             else:
                 fields_to_read = self2._columns.keys()
 
+            # if no field is required => we return all the fields
+            fields_pre = [f for f in fields_to_read if
+                               f == self2.CONCURRENCY_CHECK_FIELD
+                            or (f in self2._columns and getattr(self2._columns[f], '_classic_write'))
+                         ] + self2._inherits.values()
+
+            include_sort = True
+            fields_to_query = set(fields_to_read)
             # we have to keep track of the fields that are used for sorting but
             #  are not asked by the caller. We'll have to remove them in the returned
             #  resultset.
             fields_to_remove = set([])
+            if not fields_pre:
+                include_sort = False
+
+                fields_to_add = map(lambda x : x[1], order_by_clauses)
+
+                for field_to_add in fields_to_add:
+                    if field_to_add not in fields_to_query:
+                        fields_to_remove.add(field_to_add)
+                        fields_to_query.add(field_to_add)
+
+
+            previous_context = kwargs2['context']
+
+            # we have to remove from the context what doesn't impact the results
+            simplified_context = dict(filter(lambda (key, value) : key not in self._context, previous_context.iteritems()))
+            kwargs2['context'] = simplified_context
 
             result = []
             notincache = {}
@@ -1022,16 +1041,8 @@ class read_cache(object):
             if notincache:
                 kwargs2['ids'] = notincache.keys()
 
-                fields_to_query = set(fields_to_read)
-
-                fields_to_add = map(lambda x : x[1], order_by_clauses)
-
-                for field_to_add in fields_to_add:
-                    if field_to_add not in fields_to_query:
-                        fields_to_remove.add(field_to_add)
-                        fields_to_query.add(field_to_add)
-
                 kwargs2['fields_to_read'] = fields_to_query
+                kwargs2['context'] = previous_context
 
                 result2 = fn(self2, cr, **kwargs2)
 
@@ -1054,7 +1065,10 @@ class read_cache(object):
 
                     result.append(value)
 
-            return self.filter_dict(fields_to_remove, self.sort_orderby(order_by_clauses, result))
+            if include_sort:
+                return self.filter_dict(fields_to_remove, self.sort_orderby(order_by_clauses, result))
+            else:
+                return result
 
         cached_result.clear_cache = self.clear
         return cached_result
