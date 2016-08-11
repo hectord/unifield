@@ -1006,7 +1006,10 @@ class read_cache(object):
                     if field_to_add not in fields_to_query:
                         fields_to_remove.add(field_to_add)
                         fields_to_query.add(field_to_add)
-
+            else:
+                ordered_ids = {}
+                for position, given_id in enumerate(kwargs2['ids']):
+                    ordered_ids[given_id] = position
 
             previous_context = kwargs2['context']
 
@@ -1068,6 +1071,10 @@ class read_cache(object):
             if include_sort:
                 return self.filter_dict(fields_to_remove, self.sort_orderby(order_by_clauses, result))
             else:
+                # id we don't sort, we have to use the same order as the given IDs, otherwise
+                #  the search won't be sorted in the right order (they use only IDs at some points)
+                result.sort(key=lambda x : ordered_ids[x['id']])
+
                 return result
 
         cached_result.clear_cache = self.clear
