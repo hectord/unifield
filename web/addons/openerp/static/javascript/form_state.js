@@ -327,126 +327,8 @@ function form_find_field_in_context(prefix, field, ref_elem, cache_values) {
     });
 }
 
-function form_evalExprOld(prefix, expr, ref_elem) {
-
-    var stack = [];
-    for (var i = 0; i < expr.length; i++) {
-
-        var ex = expr[i];
-        var op = ex[1];
-        var elem = form_find_field_in_context(prefix, ex[0], ref_elem);
-        if (ex.length==1) {
-            stack.push(ex[0]);
-            continue;
-        }
-        if (!elem || !elem.length) {
-            continue
-        }
-        var val = ex[2];
-
-        var elem_value;
-        if(elem.is(':input')) {
-            elem_value = elem.val();
-        } else {
-            elem_value = elem.attr('value') || elem.text();
-        }
-
-        switch (op.toLowerCase()) {
-            case '=':
-            case '==':
-                stack.push(elem_value == val);
-                break;
-            case '!=':
-            case '<>':
-                stack.push(elem_value != val);
-                break;
-            case '<':
-                stack.push(elem_value < val);
-                break;
-            case '>':
-                stack.push(elem_value > val);
-                break;
-            case '<=':
-                stack.push(elem_value <= val);
-                break;
-            case '>=':
-                stack.push(elem_value >= val);
-                break;
-            case 'in':
-                stack.push(MochiKit.Base.findIdentical(val, elem_value) > -1);
-                break;
-            case 'not in':
-                stack.push(MochiKit.Base.findIdentical(val, elem_value) == -1);
-                break;
-        }
-    }
-    stack = eval_stackOld(stack, 0);
-    
-    // shouldn't find any `false` left at this point
-    return stack.indexOf(false) == -1;
-}
-
-function eval_stackOld(stack, i) {
-    for (var j=i; j<stack.length; j++) {
-        if (stack[j] == '|') {
-            stack = eval_stackOld(stack,j+1);
-            stack = eval_stackOld(stack,j+2);
-            stack.splice(j, 3, stack[j+1] || stack[j+2]);
-        } else if (stack[j] == '&') {
-            stack = eval_stackOld(stack,j+1);
-            stack = eval_stackOld(stack,j+2);
-            stack.splice(j, 3, stack[j+1] && stack[j+2]);
-        } else {
-            return stack;
-        }
-    }
-    return stack
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 function form_evalExpr(prefix, expr, ref_elem, cache_values) {
-    return form_evalExprNew(prefix, expr, ref_elem, cache_values);
-    var val2 = form_evalExprOld(prefix, expr, ref_elem);
-
-    if(val1 != val2){
-        console.log("ERRRROR");
-        form_evalExprNew(prefix, expr, ref_elem);
-        return form_evalExprOld(prefix, expr, ref_elem);
-    }else{
-        return val1;
-    }
-
-}
-
-
-
-function form_evalExprNew(prefix, expr, ref_elem, cache_values) {
 
     // the stack contains future that can be evaluated when it's required
     var stack = [];
@@ -557,12 +439,8 @@ function eval_stackNew(stack, i, fuzzy) {
                 return {value: val1.value && val2.value, next: val2.next};
             }
 
-        }else{
-            alert("ERREUR");
-            return;
         }
     }
-
 }
 
 function form_setReadonly(container, fieldName, readonly) {
