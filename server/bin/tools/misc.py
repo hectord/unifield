@@ -750,7 +750,7 @@ def is_hashable(h):
     except TypeError:
         return False
 
-def _generate_keys(multi, dbname, kwargs2, reset_fields=[]):
+def _generate_keys(multi, dbname, kwargs2, reset_fields=[], add_name=''):
     """
     Generate keys depending of the arguments and the mutli value
     """
@@ -769,6 +769,8 @@ def _generate_keys(multi, dbname, kwargs2, reset_fields=[]):
 
     if not multi:
         key = (('dbname', dbname),) + to_tuple(kwargs2)
+        if add_name:
+            key = (('name', add_name),) + key
         yield key, None
     else:
         multis = kwargs2[multi][:]
@@ -777,6 +779,8 @@ def _generate_keys(multi, dbname, kwargs2, reset_fields=[]):
             for reset_field in reset_fields:
                 kwargs2[reset_field] = None
             key = (('dbname', dbname),) + to_tuple(kwargs2)
+            if add_name:
+                key = (('name', add_name),) + key
             yield key, id
 
 class cache(object):
@@ -888,7 +892,7 @@ class read_cache(object):
         else:
             self.timeout = timeout
         self.lasttime = time.time()
-        self.cache = LRU(size)
+        self.cache = {}
         self.fun = None
         self._context = context
 
@@ -899,12 +903,21 @@ class read_cache(object):
         kwargs2.update(dict(zip(self.fun_arg_names, args)))
         return kwargs2
 
-    def clear(self):
+    def clear(self, name_entity=None):
         """clear the cache for all the databases (...)
         """
-        keys_to_del = self.cache.keys()
-        for key in keys_to_del:
-            self.cache.pop(key)
+
+        if name_entity is None:
+            for caches in self.cache.values():
+                keys_to_del = caches.keys()
+                for key in keys_to_del:
+                    caches.pop(key)
+        else:
+            if name_entity not in self.cache:
+                return
+            keys_to_del = self.cache[name_entity].keys()
+            for key in keys_to_del:
+                self.cache[name_entity].pop(key)
 
     def split_order_by_clause(self, order_by):
         # we have to take into account the order whenever we fetch data
@@ -962,13 +975,9 @@ class read_cache(object):
         self._sort = None
 
         def cached_result(self2, cr, *args, **kwargs):
-            import time
-            if time.time()-int(self.timeout) > self.lasttime:
-                self.lasttime = time.time()
-                t = time.time()-int(self.timeout)
-                old_keys = [key for key in self.cache.keys() if self.cache[key][1] < t]
-                for key in old_keys:
-                    self.cache.pop(key)
+
+            if self2._name not in self.cache:
+                self.cache[self2._name] = LRU(9000)
 
             if self._sort is None:
                 order_by = self2._parent_order or self2._order
@@ -1016,10 +1025,10 @@ class read_cache(object):
 
             result = []
             notincache = {}
-            for key, id in _generate_keys('ids', cr.dbname, kwargs2, ['fields_to_read']):
-                if key in self.cache:
+            for key, id in _generate_keys('ids', cr.dbname, kwargs2, ['fields_to_read'], add_name=self2._name):
+                if key in self.cache[self2._name]:
                     # we have to find if we have all the required fields in the cache
-                    values = self.cache[key][0]
+                    values = self.cache[self2._name][key][0]
 
                     fields_already_in_the_cache = values.keys()
 
@@ -1049,8 +1058,8 @@ class read_cache(object):
                 # we have to add the new rows in the resultset
                 for id, value in map(lambda x : (x['id'], x), result2):
                     key = notincache[int(id)]
-                    if key in self.cache:
-                        value_in_cache, t = self.cache[key]
+                    if key in self.cache[self2._name]:
+                        value_in_cache, t = self.cache[self2._name][key]
                     else:
                         value_in_cache, t = {}, time.time()
 
@@ -1061,7 +1070,7 @@ class read_cache(object):
                             value_in_cache[field] = value[field]
                     value_in_cache['id'] = int(id)
 
-                    self.cache[key] = (value_in_cache, t)
+                    self.cache[self2._name][key] = (value_in_cache, t)
 
                     result.append(value)
 

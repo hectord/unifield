@@ -3398,6 +3398,12 @@ class orm(orm_template):
             return result and result[0] or False
         return result
 
+    #def _clean_cache(self):
+        ## radical but this doesn't frequently happen
+        #pass
+        #self._read_flat.clear_cache(self._name)
+
+    #@tools.read_cache(prefetch=[], context=[], timeout=8000, size=900000)
     def _read_flat(self, cr, user, ids, fields_to_read, context=None, load='_classic_read'):
         if not ids:
             return []
@@ -3441,12 +3447,18 @@ class orm(orm_template):
 
             def execute_request(res, query, rule_clause, local_ids):
                 if rule_clause:
+                    #print query, [tuple(local_ids)] + rule_params
+                    #if self._table_name == 'funding_pool_distribution_line' and 124 in local_ids:
+                        #print "!"
                     cr.execute(query, [tuple(local_ids)] + rule_params)
                     if cr.rowcount != len(local_ids):
                         raise except_orm(_('AccessError'),
                                          _('Operation prohibited by access rules, or performed on an already deleted document (Operation: read, Document type: %s).')
                                          % (self._description,))
                 else:
+                    #if self._table_name == 'funding_pool_distribution_line' and 124 in local_ids:
+                        #print "!"
+                    #print query, (tuple(local_ids),)
                     cr.execute(query, (tuple(local_ids),))
 
                 res.extend(cr.dictfetchall())
@@ -4572,11 +4584,13 @@ class orm(orm_template):
         if count:
             count_query = ''.join(('SELECT COUNT("%s".id) FROM ' % self._table,
                 from_clause, where_str, limit_str, offset_str))
+            #print count_query
             cr.execute(count_query, where_clause_params)
             res = cr.fetchall()
             return res[0][0]
         select_query = ''.join(('SELECT "%s".id FROM ' % self._table,
             from_clause, where_str, order_by,limit_str, offset_str))
+        #print select_query, where_clause_params
         cr.execute(select_query, where_clause_params)
         res = cr.fetchall()
         return [x[0] for x in res]
