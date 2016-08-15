@@ -924,7 +924,6 @@ class read_cache(object):
             return ret
 
     def sort_orderby(self, clause, rows):
-        return rows
         def key_compare(row1, row2):
             for asc, field in clause:
                 f1 = row1[field]
@@ -1026,11 +1025,11 @@ class read_cache(object):
 
                     fields_already_in_the_cache = values.keys()
 
-                    if set(fields_to_read).issubset(set(fields_already_in_the_cache)):
+                    if set(fields_to_query).issubset(set(fields_already_in_the_cache)):
                         # all the values are already in the cache, we don't
                         #  have to ask the DB for more information
                         row = {'id': int(id)}
-                        for field in fields_to_read:
+                        for field in fields_to_query:
                             row[field] = values[field]
                         result.append(row)
                     else:
@@ -1057,7 +1056,7 @@ class read_cache(object):
                     else:
                         value_in_cache, t = {}, time.time()
 
-                    for field in fields_to_read:
+                    for field in fields_to_query:
                         # sometimes we don't get the column we ask to fetch...
                         #  (it happens with inherit_id for ir_action_window)
                         if field in value:
