@@ -649,6 +649,8 @@ class orm_template(object):
                         model_data = self.pool.get('ir.model.data')
                         dom_search = [('model', '=', r._table_name), ('res_id', '=', r['id'])]
                         data_ids = model_data.search(cr, uid, dom_search+[('module', '=', 'sd')])
+                        #REMARK: So if we don't find anything in terms of module, we look for any id. Is it correct?
+                        #  The previous behaviour seemed to be different.
                         if not data_ids:
                             data_ids = model_data.search(cr, uid, dom_search)
                         if len(data_ids):
@@ -1410,6 +1412,8 @@ class orm_template(object):
                                 'fields': xfields
                             }
                     attrs = {'views': views}
+                    # I don't understand this new clause. I assume it's related to the widget Selection but for me it never use get_selection as an attribute
+                    #  I must be wrong...
                     if node.get('widget') and node.get('widget') == 'selection' and not node.get('get_selection'):
                         # Prepare the cached selection list for the client. This needs to be
                         # done even when the field is invisible to the current user, because

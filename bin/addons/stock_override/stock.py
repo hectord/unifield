@@ -236,6 +236,7 @@ class stock_picking(osv.osv):
         return list(result)
 
     def _get_do_not_sync(self, cr, uid, ids, field_name, args, context=None):
+        #COMMENT: Unable to execute this code.
         res = {}
 
         if context is None:
@@ -422,6 +423,7 @@ class stock_picking(osv.osv):
         '''
         Check restriction on products
         '''
+        #COMMENT: Never called, unable to run this method.
         if isinstance(ids, (int, long)):
             ids = [ids]
 
@@ -485,11 +487,13 @@ class stock_picking(osv.osv):
         '''
         Update the partner or the address according to the other
         '''
+        #COMMENT: Unable to get into this method
         if isinstance(ids, (int, long)):
             ids = [ids]
 
         if not vals.get('address_id') and vals.get('partner_id2'):
             for pick in self.read(cr, uid, ids, ['partner_id'], context=context):
+                print "def"
                 if pick['partner_id'] and pick['partner_id'][0] != vals.get('partner_id2'):
                     addr = self.pool.get('res.partner').address_get(cr, uid, vals.get('partner_id2'), ['delivery', 'default'])
                     if not addr.get('delivery'):
@@ -499,6 +503,7 @@ class stock_picking(osv.osv):
 
         elif not vals.get('partner_id2') and vals.get('address_id'):
             for pick in self.read(cr, uid, ids, ['address_id'], context=context):
+                print "klm"
                 if pick['address_id'] and pick['address_id'][0] != vals.get('address_id'):
                     addr = self.pool.get('res.partner.address').read(cr, uid,
                             vals.get('address_id'), ['partner_id'], context=context)
@@ -602,12 +607,13 @@ You cannot choose this supplier because some destination locations are not avail
         '''
         Return to initial state if the picking is 'Import in progress'
         '''
+        #COMMENT: Dead code? Unable to execute it
         if not context:
             context = {}
 
         if isinstance(ids, (int, long)):
             ids = [ids]
-
+        print "dskjadsa"
         for pick in self.read(cr, uid, ids, ['state_before_import'], context=context):
             self.write(cr, uid, [pick['id']], {'state': pick['state_before_import']}, context=context)
 
@@ -1205,6 +1211,7 @@ You cannot choose this supplier because some destination locations are not avail
 
         if isinstance(ids, (int, long)):
             ids = [ids]
+
         for pick in self.read(cr, uid, ids, ['move_lines', 'type']):
             if pick['move_lines'] and pick['type'] == 'in':
                 not_assigned_move = move_obj.search(cr, uid,
@@ -1244,7 +1251,8 @@ You cannot choose this supplier because some destination locations are not avail
         self.write(cr, uid, ids, {'state': 'shipped'})
         self.log_picking(cr, uid, ids, context=context)
         move_obj = self.pool.get('stock.move')
-
+        ####################################################################
+        ####################################################################
         for pick in self.read(cr, uid, ids, ['move_lines', 'type']):
             if pick['move_lines'] and pick['type'] == 'in':
                 not_assigned_move = pick['move_lines']
@@ -1782,6 +1790,9 @@ class stock_move(osv.osv):
 
             # separate the moves which have the same values than the fisrt one
             # (it could be a majority (or all) in some cases
+            #COMMENT: Crash here....
+            # first_move = self.read(cr, uid, ids[0], ['partner_id', 'address_id',
+            # IndexError: list index out of range
             first_move = self.read(cr, uid, ids[0], ['partner_id', 'address_id',
                                                      'state', 'picking_id'],
                                                     context=context)

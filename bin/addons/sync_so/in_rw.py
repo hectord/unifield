@@ -96,6 +96,16 @@ class stock_picking(osv.osv):
             return message 
         
         # UF-2422: Remove all current IN lines, then recreate new lines
+        # REMARK: I'm just afraid of one thing: I'm quite sure this code has never
+        #  been tester because we don't have any test covering it. Moreover, this code
+        #  is never executed in production since this functionnality is dead. Why should
+        #  we take this risk? I'm quite sure that the previous write was on purpose bacause
+        #  of "access rights" or anything similar.
+        #ANSWER: I improve the unlink adding force parameter to avoid to have
+        # to write state='draft' before unlink. Write is an heavy operation
+        # (and useless in this case). As this new parameter was available, I
+        # update all the call of unlink with a write state='draft' just before
+        # to use it
         move_obj.unlink(cr, uid, [x.id for x in existing_pick.move_lines], force=True)
             
         picking_lines = self.get_picking_lines(cr, uid, source, pick_dict, context)
